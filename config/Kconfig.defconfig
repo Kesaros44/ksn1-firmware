@@ -1,0 +1,9 @@
+if SHIELD_KSN_1_LEFT || SHIELD_KSN_1_RIGHT
+
+config ZMK_KEYBOARD_NAME
+    default "KSN1"
+
+config ZMK_SPLIT
+    default y
+
+endif
