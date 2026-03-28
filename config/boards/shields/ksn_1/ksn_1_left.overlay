@@ -1,41 +1,29 @@
 /*
- * ksn_1_left.overlay — 마스터(왼쪽) 전용
- *
- * SK6812 CapsLock RGB LED
- * D19 = P0.02 → SPI1 MOSI
+ * ksn_1_left.overlay — 하드웨어 스왑 반영 (Backlight = D1)
  */
 
 #include "ksn_1.dtsi"
 
-/ {
-    chosen {
-        zmk,underglow = &led_strip;
-    };
-
-    aliases {
-        led-strip = &led_strip;
+&pinctrl {
+    pwm0_default: pwm0_default {
+        group1 {
+            /* PWM 출력을 P0.06 (D1) 으로 변경 */
+            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; 
+            low-power-enable;
+        };
     };
 };
 
-&spi1 {
-    compatible    = "nordic,nrf-spim";
-    status        = "okay";
-    mosi-pin      = <2>;     /* D19 = P0.02 = CapsLock SK6812 DIN */
-    miso-pin      = <255>;
-    sck-pin       = <255>;
-    pinctrl-0     = <>;
+&pwm0 {
+    status = "okay";
+    pinctrl-0 = <&pwm0_default>;
     pinctrl-names = "default";
+};
 
-    led_strip: ws2812@0 {
-        compatible        = "worldsemi,ws2812-spi";
-        label             = "WS2812";
-        reg               = <0>;
-        spi-max-frequency = <4000000>;
-        chain-length      = <1>;
-        spi-one-frame     = <0x70>;
-        spi-zero-frame    = <0x40>;
-        color-mapping     = <LED_COLOR_ID_GREEN
-                             LED_COLOR_ID_RED
-                             LED_COLOR_ID_BLUE>;
+/ {
+    /* 백라이트가 D1 (P0.06) 을 쓰도록 설정 */
+    backlight {
+        compatible = "pwm-backlight";
+        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
     };
 };
