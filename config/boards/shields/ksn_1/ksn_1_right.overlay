@@ -2,19 +2,15 @@
 
 &pinctrl {
     pwm0_default: pwm0_default {
-        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
+        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; }; /* D1 = 백라이트 */
     };
 };
 
-&pwm0 {
-    status = "okay";
-    pinctrl-0 = <&pwm0_default>;
-    pinctrl-names = "default";
-};
+&pwm0 { status = "okay"; pinctrl-0 = <&pwm0_default>; pinctrl-names = "default"; };
 
 / {
+    /* 오른쪽은 캡스락 LED가 없다면 chosen 부분을 비워둡니다. */
     backlight: backlight {
-        compatible = "pwm-backlight";
-        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+        compatible = "pwm-backlight"; pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
     };
 };
