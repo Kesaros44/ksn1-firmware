@@ -3,3 +3,7 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
     uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
+    # 여기서부터가 중요합니다! (with가 추가된 부분)
+    with:
+      build_matrix_path: "config/build.yaml"
+      config_path: "config"
