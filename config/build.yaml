@@ -1,6 +1,8 @@
 ---
 include:
-  - board: nice_nano@zmk
+  - board: nice_nano
     shield: ksn_1_left
-  - board: nice_nano@zmk
+    board_root: config
+  - board: nice_nano
     shield: ksn_1_right
+    board_root: config
