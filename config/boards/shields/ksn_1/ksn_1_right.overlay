@@ -1,16 +1,8 @@
-/*
- * ksn_1_right.overlay — 하드웨어 스왑 반영 (Right side)
- */
-
 #include "ksn_1.dtsi"
 
-/* 오른쪽도 똑같이 P0.06 (D1)을 PWM으로 지정 */
 &pinctrl {
     pwm0_default: pwm0_default {
-        group1 {
-            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; 
-            low-power-enable;
-        };
+        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
     };
 };
 
@@ -21,8 +13,7 @@
 };
 
 / {
-    /* 오른쪽 백라이트 설정 */
-    backlight {
+    backlight: backlight {
         compatible = "pwm-backlight";
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
     };
