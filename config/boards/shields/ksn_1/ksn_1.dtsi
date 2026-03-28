@@ -1,12 +1,9 @@
-/* ksn_1.dtsi — 전체 통합본 (회로도 반영) */
-
 / {
     chosen {
         zmk,kscan = &kscan0;
         zmk,matrix_transform = &default_transform;
     };
 
-    /* 1. Transform: 키 위치 정의 (11열 6행) */
     default_transform: matrix_transform {
         compatible = "zmk,matrix-transform";
         columns = <11>;
@@ -21,18 +18,17 @@
         >;
     };
 
-    /* 2. Kscan: 실제 핀 연결 정의 (D3=row6 반영) */
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
         diode-direction = "col2row";
 
         row-gpios
-            = <&gpio1 0  GPIO_ACTIVE_HIGH> /* D6  */
-            , <&gpio0 24 GPIO_ACTIVE_HIGH> /* D5  */
-            , <&gpio0 22 GPIO_ACTIVE_HIGH> /* D4  */
-            , <&gpio0 17 GPIO_ACTIVE_HIGH> /* D2  */
-            , <&gpio0 8  GPIO_ACTIVE_HIGH> /* D0  */
-            , <&gpio0 20 GPIO_ACTIVE_HIGH> /* D3 (P0.20) = row6 */
+            = <&gpio1 0  GPIO_ACTIVE_HIGH> 
+            , <&gpio0 24 GPIO_ACTIVE_HIGH> 
+            , <&gpio0 22 GPIO_ACTIVE_HIGH> 
+            , <&gpio0 17 GPIO_ACTIVE_HIGH> 
+            , <&gpio0 8  GPIO_ACTIVE_HIGH> 
+            , <&gpio0 20 GPIO_ACTIVE_HIGH> /* D3 = row6 */
             ;
 
         col-gpios
