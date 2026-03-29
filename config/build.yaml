@@ -1,8 +1,6 @@
 ---
 include:
-  - board: nice_nano/nrf52840
+  - board: nice_nano//zmk
     shield: ksn_1_left
-    cmake-args: -DCONFIG_ZMK_BOARD_COMPAT=y
-  - board: nice_nano/nrf52840
+  - board: nice_nano//zmk
     shield: ksn_1_right
-    cmake-args: -DCONFIG_ZMK_BOARD_COMPAT=y
