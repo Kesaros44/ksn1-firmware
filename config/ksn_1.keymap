@@ -6,7 +6,7 @@
 
 / {
     behaviors {
-        /* 홀드 시 2번 레이어(LEDC), 탭 시 CAPS 키 */
+        /* 홀드 시 2번 레이어(LED), 탭 시 CAPS 키 작동 */
         caps_ledc: caps_ledc {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
