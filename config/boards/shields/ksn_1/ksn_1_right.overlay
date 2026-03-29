@@ -2,14 +2,26 @@
 
 &pinctrl {
     pwm0_default: pwm0_default {
-        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
+        group1 { 
+            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; 
+        };
     };
 };
 
-&pwm0 { status = "okay"; pinctrl-0 = <&pwm0_default>; pinctrl-names = "default"; };
+&pwm0 { 
+    status = "okay"; 
+    pinctrl-0 = <&pwm0_default>; 
+    pinctrl-names = "default"; 
+};
 
 / {
+    /* 이 chosen 블록이 반드시 있어야 빌드가 성공합니다! */
+    chosen {
+        zmk,backlight = &backlight;
+    };
+
     backlight: backlight {
-        compatible = "pwm-backlight"; pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+        compatible = "pwm-backlight"; 
+        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
     };
 };
