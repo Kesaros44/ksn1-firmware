@@ -1,7 +1,7 @@
 #include "ksn_1.dtsi"
 
 &pinctrl {
-    // PWM (백라이트) 핀 설정 - D1 (GPIO 0.06)
+    /* PWM (백라이트) 핀 설정 - D1 (GPIO 0.06) */
     pwm0_default: pwm0_default {
         group1 {
             psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
@@ -15,7 +15,7 @@
         };
     };
 
-    // SPI (RGB 언더글로우) 핀 설정 - D0 (GPIO 0.02)
+    /* SPI (RGB 언더글로우) 핀 설정 - D0 (GPIO 0.02) */
     spi3_default: spi3_default {
         group1 {
             psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
@@ -57,11 +57,17 @@
 / {
     chosen {
         zmk,underglow = &led_strip;
-        zmk,backlight = &backlight;  /* ◀◀ 이 줄이 핵심! 이게 빠져서 에러가 난 겁니다 */
+        zmk,backlight = &backlight; 
     };
 
+    /* 에러 해결을 위해 내부에 led_0를 추가한 백라이트 노드 */
     backlight: backlight {
         compatible = "pwm-backlight";
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+
+        /* ◀ 이 부분이 핵심입니다. 이게 있어야 빌드 엔진이 에러를 안 냅니다. */
+        led_0 {
+            pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+        };
     };
 };
