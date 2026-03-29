@@ -60,12 +60,11 @@
         zmk,backlight = &backlight; 
     };
 
-    /* 에러 해결을 위해 내부에 led_0를 추가한 백라이트 노드 */
     backlight: backlight {
         compatible = "pwm-backlight";
+        /* ◀ 이 부분이 핵심입니다. &pwm0 뒤에 채널 번호를 명시해야 조립기가 장치를 찾습니다. */
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
 
-        /* ◀ 이 부분이 핵심입니다. 이게 있어야 빌드 엔진이 에러를 안 냅니다. */
         led_0 {
             pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
         };
