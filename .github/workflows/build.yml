@@ -2,7 +2,8 @@ name: Build ZMK Firmware
 on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.5
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
     with:
-      build_matrix_path: "config/build.yaml"
+      # build_matrix_path가 없어도 기본적으로 config 폴더를 참조하게 합니다.
+      # 만약 에러가 지속되면 아래 config_path만 남기고 실행해 보세요.
       config_path: "config"
