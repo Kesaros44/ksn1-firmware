@@ -1,8 +1,64 @@
 name: Build ZMK Firmware
 on: [push, pull_request, workflow_dispatch]
+
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
-    with:
-      build_matrix_path: "config/build.yaml"
-      config_path: "config"
+    runs-on: ubuntu-latest
+    container:
+      image: zmkfirmware/zmk-build-arm:stable
+    name: Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Cache west modules
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-zephyr-modules
+        with:
+          path: |
+            modules
+            zephyr
+            bootloader
+            zmk
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/west.yml', '**/build.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: West Init
+        run: west init -l config || west init -l config
+
+      - name: West Update
+        run: west update
+
+      - name: West Zephyr Export
+        run: west zephyr-export
+
+      - name: Build Left (ksn_1_left)
+        run: west build -s zmk/app -b nice_nano -- -DSHIELD=ksn_1_left -DZMK_CONFIG="${GITHUB_WORKSPACE}/config"
+
+      - name: Rename Left Artifact
+        run: cp build/zephyr/zmk.uf2 ksn_1_left.uf2
+
+      - name: Archive Left Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ksn_1_left_firmware
+          path: ksn_1_left.uf2
+
+      # 오른쪽(Right) 펌웨어가 필요하면 아래 주석을 풀고 사용하세요
+      # - name: Build Right (ksn_1_right)
+      #   run: |
+      #     rm -rf build
+      #     west build -s zmk/app -b nice_nano -- -DSHIELD=ksn_1_right -DZMK_CONFIG="${GITHUB_WORKSPACE}/config"
+      
+      # - name: Rename Right Artifact
+      #   run: cp build/zephyr/zmk.uf2 ksn_1_right.uf2
+
+      # - name: Archive Right Artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: ksn_1_right_firmware
+      #     path: ksn_1_right.uf2
