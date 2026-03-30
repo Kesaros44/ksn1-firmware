@@ -36,3 +36,11 @@
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
     };
 };
+
+/ {
+    /* 외부 전원 제어 노드 추가 (에러 해결 핵심) */
+    ext-power {
+        compatible = "zmk,ext-power-generic";
+        control-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>; // nice_nano의 기본 VCC 핀
+    };
+};
