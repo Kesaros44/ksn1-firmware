@@ -63,17 +63,17 @@
         zmk,underglow = &led_strip;
     };
 
-    /* P0.06 단색 LED 정의 */
-    backlight: backlight {
+    /* P0.06 단색 LED 정의 - label 추가 및 주기 최적화 */
+    backlight: backlight_node {
         compatible = "pwm-backlight";
-        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+        label = "Backlight";
+        pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
     };
-};
 
-/ {
-    /* 외부 전원 제어 노드 추가 (에러 해결 핵심) */
+    /* 외부 전원 제어 (nice_nano VCC) - label 추가 */
     ext-power {
         compatible = "zmk,ext-power-generic";
-        control-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>; // nice_nano의 기본 VCC 핀
+        label = "EXT_POWER";
+        control-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
     };
 };
