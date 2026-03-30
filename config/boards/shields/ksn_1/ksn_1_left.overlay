@@ -1,15 +1,14 @@
 #include "ksn_1.dtsi"
 
 &pinctrl {
-    /* 1. 백라이트용 PWM 핀 설정 (P0.06) */
+    /* 1. 백라이트용 PWM 핀 설정 (P0.06) - 왼/오 공통 */
     pwm0_default: pwm0_default {
-        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
+        group1 { 
+            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; 
+            nordic,drive-mode = <NRF_DRIVE_H0H1>; // LED 밝기를 위해 드라이브 강화
+        };
     };
-
-    /* 2. 캡스락 LED용 GPIO 핀 설정 (P0.02) */
-    gpio_leds_default: gpio_leds_default {
-        group1 { psels = <NRF_PSEL(OUT_LOW, 0, 2)>; };
-    };
+    /* 주의: 캡스락(P0.02)은 단순 GPIO이므로 pinctrl 설정이 필요 없습니다. */
 };
 
 &pwm0 {
@@ -21,15 +20,14 @@
 / {
     chosen {
         zmk,backlight = &backlight;
-        /* 캡스락 상태를 이 LED와 연결합니다 */
+        /* 왼쪽 키보드의 캡스락 상태를 이 LED와 연결 */
         zmk,battery_led = &caps_led; 
     };
 
-    /* 백라이트 (오른쪽/왼쪽 공통 P0.06) */
+    /* 백라이트 설정 (P0.06) */
     backlight: backlight {
         compatible = "pwm-backlight";
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
-        led_0 { pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>; };
     };
 
     /* 캡스락 인디케이터 (왼쪽 전용 P0.02) */
