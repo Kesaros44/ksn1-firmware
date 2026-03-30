@@ -1,8 +1,12 @@
 #include "ksn_1.dtsi"
 
 &pinctrl {
+    /* 백라이트용 PWM 핀 설정 (오른쪽 P0.06) */
     pwm0_default: pwm0_default {
-        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
+        group1 { 
+            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; 
+            nordic,drive-mode = <NRF_DRIVE_H0H1>; // LED 밝기를 안정적으로 유지하기 위해 추가
+        };
     };
 };
 
@@ -14,12 +18,14 @@
 
 / {
     chosen {
+        /* 오른쪽 키보드도 백라이트 기능을 활성화 */
         zmk,backlight = &backlight;
     };
 
     backlight: backlight {
         compatible = "pwm-backlight";
+        /* 중복된 led_0 선언을 정리하고 하나로 통합 */
         pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
-        led_0 { pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>; };
+        label = "Backlight";
     };
 };
