@@ -2,23 +2,14 @@
 
 &pinctrl {
     pwm0_default: pwm0_default {
-        group1 {
-            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
-        };
-    };
-    pwm0_sleep: pwm0_sleep {
-        group1 {
-            psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
-            low-power-enable;
-        };
+        group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 6)>; };
     };
 };
 
 &pwm0 {
     status = "okay";
     pinctrl-0 = <&pwm0_default>;
-    pinctrl-1 = <&pwm0_sleep>;
-    pinctrl-names = "default", "sleep";
+    pinctrl-names = "default";
 };
 
 / {
@@ -27,8 +18,8 @@
     };
 
     backlight: backlight {
-        compatible = "zmk,backlight-pwm";   // ✅ 핵심 수정
-        label = "BACKLIGHT";
-        pwms = <&pwm0 0 20000 PWM_POLARITY_NORMAL>;
+        compatible = "pwm-backlight";
+        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+        led_0 { pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>; };
     };
 };
