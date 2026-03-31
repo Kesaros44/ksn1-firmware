@@ -2,9 +2,9 @@
 
 /*
  * Slave (Right) overlay
- * Encoder A: EN1=D19=P0.02
- * Encoder B: EN2=D20=P0.29
- * Backlight MOSFET: D1=P0.06 via PWM0
+ * Backlight MOSFET: D1  = P0.06 -> PWM0
+ * Encoder A: EN1 = D19 = P0.02
+ * Encoder B: EN2 = D20 = P0.29
  */
 
 &pinctrl {
@@ -39,7 +39,7 @@
 
     backlight: pwmleds {
         compatible = "pwm-leds";
-        pwm_led_0 {
+        led_0 {
             pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
         };
     };
