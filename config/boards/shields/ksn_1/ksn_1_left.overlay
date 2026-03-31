@@ -1,23 +1,53 @@
 #include "ksn_1.dtsi"
 
+/*
+ * Master (Left) overlay
+ * CapsLock SK6812: D19=P0.02 via SPI3
+ * Backlight MOSFET: D1=P0.06 via PWM0
+ */
+
 &pinctrl {
+    spi3_default: spi3_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
+        };
+    };
+    spi3_sleep: spi3_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
+            low-power-enable;
+        };
+    };
     pwm0_default: pwm0_default {
         group1 {
             psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
         };
     };
-
     pwm0_sleep: pwm0_sleep {
         group1 {
             psels = <NRF_PSEL(PWM_OUT0, 0, 6)>;
             low-power-enable;
         };
     };
+};
 
-    spi3_default: spi3_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
-        };
+&spi3 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+    pinctrl-0 = <&spi3_default>;
+    pinctrl-1 = <&spi3_sleep>;
+    pinctrl-names = "default", "sleep";
+
+    led_strip: ws2812@0 {
+        compatible = "worldsemi,ws2812-spi";
+        reg = <0>;
+        spi-max-frequency = <4000000>;
+        chain-length = <1>;
+        spi-one-frame = <0x70>;
+        spi-zero-frame = <0x40>;
+        color-mapping = <LED_COLOR_ID_GREEN
+                         LED_COLOR_ID_RED
+                         LED_COLOR_ID_BLUE>;
     };
 };
 
@@ -28,35 +58,16 @@
     pinctrl-names = "default", "sleep";
 };
 
-&spi3 {
-    compatible = "nordic,nrf-spim";
-    status = "okay";
-    pinctrl-0 = <&spi3_default>;
-    pinctrl-names = "default";
-
-    led_strip: ws2812@0 {
-        compatible = "worldsemi,ws2812-spi";
-        reg = <0>;
-        spi-max-frequency = <4000000>;
-        chain-length = <1>;
-        spi-one-frame = <0x70>;
-        spi-zero-frame = <0x40>;
-        color-mapping = <2 1 3>;
-    };
-};
-
 / {
     chosen {
-        zmk,backlight = &backlight;
         zmk,underglow = &led_strip;
+        zmk,backlight = &backlight;
     };
 
-    backlight: backlight {
-        compatible = "pwm-backlight";
-        pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
-        /* 🔥 이 부분이 추가되어야 빌드 엔진이 계산 오류를 안 냅니다 */
-        led_0 {
-            pwms = <&pwm0 0 10000 PWM_POLARITY_NORMAL>;
+    backlight: pwmleds {
+        compatible = "pwm-leds";
+        pwm_led_0 {
+            pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
         };
     };
 };
