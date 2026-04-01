@@ -1,0 +1,6 @@
+---
+include:
+  - board: nice_nano
+    shield: ksn_1_left
+  - board: nice_nano
+    shield: ksn_1_right
