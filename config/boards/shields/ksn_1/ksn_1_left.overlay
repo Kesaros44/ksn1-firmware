@@ -5,26 +5,11 @@
  * Master (Left) overlay
  * CapsLock SK6812 : D19 = P0.02 -> SPI3 MOSI
  */
-&pinctrl {
-    spi3_default: spi3_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
-        };
-    };
-    spi3_sleep: spi3_sleep {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 2)>;
-            low-power-enable;
-        };
-    };
-};
 
 &spi3 {
     compatible = "nordic,nrf-spim";
     status = "okay";
-    pinctrl-0 = <&spi3_default>;
-    pinctrl-1 = <&spi3_sleep>;
-    pinctrl-names = "default", "sleep";
+    mosi-pin = <2>;
     led_strip: ws2812@0 {
         compatible = "worldsemi,ws2812-spi";
         reg = <0>;
