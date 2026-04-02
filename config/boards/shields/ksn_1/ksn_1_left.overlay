@@ -1,5 +1,6 @@
 #include "ksn_1.dtsi"
 #include <dt-bindings/pwm/pwm.h>
+#include <dt-bindings/led/led.h>
 
 /*
  * Master (Left) overlay
