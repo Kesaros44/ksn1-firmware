@@ -67,7 +67,7 @@
     backlight: pwmleds {
         compatible = "pwm-leds";
         led_0 {
-            pwms = <&pwm0 0 10000000 0>;
+            pwms = <&pwm0 0 100000 0>;
         };
     };
 };
