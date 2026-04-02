@@ -1,5 +1,4 @@
 #include "ksn_1.dtsi"
-#include <dt-bindings/pwm/pwm.h>
 
 /*
  * Slave (Right) overlay
