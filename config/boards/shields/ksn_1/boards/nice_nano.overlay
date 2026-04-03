@@ -1,4 +1,5 @@
 #include <dt-bindings/zmk/rgb.h>
+#include <dt-bindings/led/led.h>
 
 &spi1 {
     compatible = "nordic,nrf-spim";
@@ -10,7 +11,7 @@
         label = "WS2812";
         reg = <0>;
         spi-max-frequency = <4000000>;
-        chain-length = <10>; /* 언더글로우 LED 개수 - 실제 개수로 수정 */
+        chain-length = <10>;
         spi-one-frame = <0x70>;
         spi-zero-frame = <0x40>;
         color-mapping = <LED_COLOR_ID_GREEN
