@@ -1,11 +1,5 @@
 #include "ksn_1.dtsi"
 
-/*
- * Slave (Right) overlay
- * Encoder A: EN1 = D19 = P0.02
- * Encoder B: EN2 = D20 = P0.29
- */
-
 &default_transform {
     col-offset = <11>;
 };
@@ -18,23 +12,10 @@
         steps = <80>;
         status = "okay";
     };
+
     sensors {
         compatible            = "zmk,keymap-sensors";
         sensors               = <&encoder>;
         triggers-per-rotation = <20>;
-    };
-};
-/ {
-    keymap {
-        compatible = "zmk,keymap";
-        default_layer {
-            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
-        };
-        func_layer {
-            sensor-bindings = <&inc_dec_kp C_NEXT C_PREV>;
-        };
-        led_ctrl_layer {
-            sensor-bindings = <&inc_dec_kp RGB_BRI RGB_BRD>;
-        };
     };
 };
