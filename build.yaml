@@ -1,5 +1,6 @@
+---
 include:
-  - board: nice_nano/nrf52840
+  - board: nice_nano//zmk
     shield: ksn_1_left
-  - board: nice_nano/nrf52840
+  - board: nice_nano//zmk
     shield: ksn_1_right
