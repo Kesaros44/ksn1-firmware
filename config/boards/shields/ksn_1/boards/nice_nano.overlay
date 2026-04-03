@@ -1,5 +1,15 @@
 #include <dt-bindings/led/led.h>
 
+/ {
+    backlight: pwmleds {
+        compatible = "pwm-leds";
+        status = "okay";
+        pwm_led_0: pwm_led_0 {
+            pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
+        };
+    };
+};
+
 &spi3 {
     compatible = "nordic,nrf-spim";
     status = "okay";
