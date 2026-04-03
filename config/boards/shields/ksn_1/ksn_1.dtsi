@@ -9,14 +9,6 @@
         zmk,backlight        = &backlight;   /* 추가 */
     };
 
-    backlight: pwmleds {                     /* 추가 */
-        compatible = "pwm-leds";
-        status = "okay";
-        pwm_led_0: pwm_led_0 {
-            pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
-        };
-    };
-
     default_transform: matrix_transform {
         compatible = "zmk,matrix-transform";
         columns = <22>;
