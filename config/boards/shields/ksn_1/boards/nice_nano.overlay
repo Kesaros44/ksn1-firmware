@@ -12,13 +12,6 @@
             pwms = <&pwm0 0 PWM_MSEC(10) PWM_POLARITY_NORMAL>;
         };
     };
-
-    /* ext_power 노드 제거 — nice_nano v2 보드 DTS에 이미 존재함 */
-};
-
-/* 기존 보드의 ext_power 노드에 설정만 추가 (선택사항) */
-&ext_power {
-    init-delay-ms = <50>;
 };
 
 &spi3 {
