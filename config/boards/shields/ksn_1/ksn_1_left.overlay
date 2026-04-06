@@ -5,7 +5,11 @@
     leds {
         compatible = "gpio-leds";
         caps_lock_led: caps_lock_led {
-            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 */
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 - D19 */
+        };
+        ble_led: led_1 {
+            gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;  /* P0.29 - D20 */
+            label = "BLE Status LED";
         };
     };
 
@@ -15,5 +19,9 @@
             indicator = <HID_INDICATOR_CAPS_LOCK>;
             leds = <&caps_lock_led>;
         };
+    };
+
+    aliases {
+        indicator-led = &ble_led;
     };
 };
