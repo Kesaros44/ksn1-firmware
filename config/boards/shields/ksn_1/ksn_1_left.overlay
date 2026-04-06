@@ -1,0 +1,19 @@
+#include "ksn_1.dtsi"
+#include <dt-bindings/zmk/hid_indicators.h>
+
+/ {
+    leds {
+        compatible = "gpio-leds";
+        caps_lock_led: caps_lock_led {
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 */
+        };
+    };
+
+    indicators {
+        compatible = "zmk,indicator-leds";
+        caps_lock_indicator: caps_lock {
+            indicator = <HID_INDICATOR_CAPS_LOCK>;
+            leds = <&caps_lock_led>;
+        };
+    };
+};
