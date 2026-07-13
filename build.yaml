@@ -4,5 +4,3 @@ include:
     shield: ksn_1_left
   - board: nice_nano//zmk
     shield: ksn_1_right
-  - board: nice_nano//zmk
-    shield: settings_reset
