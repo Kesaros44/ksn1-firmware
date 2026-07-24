@@ -1,28 +1,30 @@
 #include "ksn_1.dtsi"
-#include <dt-bindings/zmk/hid_indicators.h>
 
+/* zmk,indicator-leds(caps_lock_indicator) 노드는 넣지 않음.
+   이유: ZMK 코어의 app/src/indicators/indicator_leds.c 는 central 전용 API인
+   zmk_hid_indicators_get_current_profile() / zmk_endpoint_is_connected() /
+   zmk_endpoint_changed 이벤트를 role 체크 없이 무조건 참조하는데, central 역할이
+   오른쪽(right)으로 옮겨진 지금 왼쪽(peripheral) 빌드에 이 노드가 있으면 해당
+   central 전용 심볼들이 undefined reference 로 남는다.
+   대신 caps_lock_led / status_led GPIO 노드만 정의하고, config/src/
+   ksn1_peripheral_indicators.c 커스텀 드라이버(zephyr module: config/zephyr/module.yml,
+   Kconfig: CONFIG_KSN1_PERIPHERAL_INDICATORS)가 peripheral에서도 쓸 수 있는
+   zmk_hid_indicators_changed / zmk_split_peripheral_status_changed 이벤트로
+   이 두 LED를 직접 구동한다. */
 / {
     leds {
         compatible = "gpio-leds";
         caps_lock_led: caps_lock_led {
             gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 - D19 */
         };
-        ble_led: led_1 {
+        status_led: led_1 {
             gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;  /* P0.29 - D20 */
             label = "BLE Status LED";
         };
     };
 
-    indicators {
-        compatible = "zmk,indicator-leds";
-        caps_lock_indicator: caps_lock {
-            indicator = <HID_INDICATOR_CAPS_LOCK>;
-            leds = <&caps_lock_led>;
-        };
+    aliases {
+        caps-lock-led = &caps_lock_led;
+        status-led = &status_led;
     };
-    /* aliases { indicator-led = &ble_led; };
-       제거함: zmk-poor-mans-led-indicator 외부 모듈이 이 alias 존재 여부만으로
-       indicator_leds.c 를 무조건 컴파일하는데, 이 파일이 central 전용 함수
-       (zmk_endpoint_is_connected 등)를 참조해서 왼쪽이 peripheral이 된 지금
-       링크 에러가 발생함. 어차피 LED는 이미 비활성화 요청되어 불필요. */
 };
