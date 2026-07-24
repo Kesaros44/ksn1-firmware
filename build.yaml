@@ -8,3 +8,7 @@ include:
     shield: ksn_1_right
     snippet: zmk-usb-logging
     artifact-name: ksn_1_right_debug_logging
+  - board: nice_nano//zmk
+    shield: ksn_1_left
+    snippet: zmk-usb-logging
+    artifact-name: ksn_1_left_debug_logging
