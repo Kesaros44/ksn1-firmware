@@ -1,16 +1,15 @@
 #include "ksn_1.dtsi"
+#include <dt-bindings/zmk/hid_indicators.h>
 
-/* zmk,indicator-leds(caps_lock_indicator) 노드는 넣지 않음.
-   이유: ZMK 코어의 app/src/indicators/indicator_leds.c 는 central 전용 API인
-   zmk_hid_indicators_get_current_profile() / zmk_endpoint_is_connected() /
-   zmk_endpoint_changed 이벤트를 role 체크 없이 무조건 참조하는데, central 역할이
-   오른쪽(right)으로 옮겨진 지금 왼쪽(peripheral) 빌드에 이 노드가 있으면 해당
-   central 전용 심볼들이 undefined reference 로 남는다.
-   대신 caps_lock_led / status_led GPIO 노드만 정의하고, config/src/
-   ksn1_peripheral_indicators.c 커스텀 드라이버(zephyr module: config/zephyr/module.yml,
-   Kconfig: CONFIG_KSN1_PERIPHERAL_INDICATORS)가 peripheral에서도 쓸 수 있는
-   zmk_hid_indicators_changed / zmk_split_peripheral_status_changed 이벤트로
-   이 두 LED를 직접 구동한다. */
+/* caps_lock_led: ZMK 코어 공식 LED Indicators 기능 사용 (커스텀 드라이버 불필요).
+   CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS=y 로 central(오른쪽)의 caps lock
+   상태가 peripheral(왼쪽)까지 동기화되며, zmk,indicator-leds 노드가 이 GPIO를
+   직접 구동한다. (참고: https://zmk.dev/docs/hardware-integration/lighting/led-indicators)
+
+   status_led: zmk-poor-mans-led-indicator 모듈(west.yml에 이미 임포트됨) 사용.
+   indicator-led alias로 지정하고 .conf에서 CONFIG_INDICATOR_LED_WIDGET=y,
+   CONFIG_INDICATOR_LED_SHOW_PERIPHERAL_CONNECTED=y 를 켜면, 왼쪽이 central(오른쪽)에
+   붙어있는지(블루투스 연결 상태)를 이 LED로 표시한다. */
 / {
     leds {
         compatible = "gpio-leds";
@@ -23,8 +22,17 @@
         };
     };
 
+    indicators {
+        compatible = "zmk,indicator-leds";
+        caps_lock_indicator: caps_lock {
+            indicator = <HID_INDICATOR_CAPS_LOCK>;
+            leds = <&caps_lock_led>;
+        };
+    };
+
     aliases {
         caps-lock-led = &caps_lock_led;
         status-led = &status_led;
+        indicator-led = &status_led;
     };
 };
