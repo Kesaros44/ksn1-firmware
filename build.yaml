@@ -12,3 +12,6 @@ include:
     shield: ksn_1_left
     snippet: zmk-usb-logging
     artifact-name: ksn_1_left_debug_logging
+  - board: nice_nano//zmk
+    shield: settings_reset
+    artifact-name: settings_reset
