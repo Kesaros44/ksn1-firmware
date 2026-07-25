@@ -12,9 +12,15 @@
  * peripheral: with CONFIG_ZMK_SPLIT_PERIPHERAL_HID_INDICATORS=y, central
  * pushes the raw indicator bitmask to the peripheral over BLE and this event
  * fires locally with no central-only APIs involved.
+ *
+ * This file only builds when both:
+ *   - this board is not the split central (CONFIG_ZMK_SPLIT_ROLE_CENTRAL unset), and
+ *   - the caps_lock_led alias actually exists in the active devicetree overlay
+ * so non-split shields (e.g. settings_reset) that define neither simply skip
+ * this file instead of hitting a missing-alias build error.
  */
 
-#if !defined(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#if !defined(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) && DT_NODE_EXISTS(DT_ALIAS(caps_lock_led))
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
@@ -29,8 +35,6 @@
 
 static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
 
-BUILD_ASSERT(DT_NODE_EXISTS(DT_ALIAS(caps_lock_led)),
-             "caps-lock-led alias not found - check ksn_1_left.overlay");
 static const uint8_t caps_lock_led_idx = DT_NODE_CHILD_IDX(DT_ALIAS(caps_lock_led));
 
 static int caps_lock_led_listener(const zmk_event_t *eh) {
@@ -51,4 +55,4 @@ static int caps_lock_led_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(caps_lock_led, caps_lock_led_listener);
 ZMK_SUBSCRIPTION(caps_lock_led, zmk_hid_indicators_changed);
 
-#endif /* !CONFIG_ZMK_SPLIT_ROLE_CENTRAL */
+#endif /* !CONFIG_ZMK_SPLIT_ROLE_CENTRAL && caps_lock_led alias exists */
