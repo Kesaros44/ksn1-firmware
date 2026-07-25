@@ -14,7 +14,7 @@
  * fires locally with no central-only APIs involved.
  */
 
-#if !IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#if !defined(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
