@@ -18,7 +18,16 @@
  *   - the caps_lock_led alias actually exists in the active devicetree overlay
  * so non-split shields (e.g. settings_reset) that define neither simply skip
  * this file instead of hitting a missing-alias build error.
+ *
+ * NOTE: <zephyr/devicetree.h> must be included BEFORE the #if below, since
+ * DT_NODE_EXISTS/DT_ALIAS are ordinary macros defined by that header - if the
+ * #if runs first, the preprocessor treats them as plain (undefined) tokens
+ * and errors out with "missing binary operator before token (".
+ * CONFIG_ZMK_SPLIT_ROLE_CENTRAL doesn't need an include: Kconfig symbols are
+ * injected globally via -imacros autoconf.h at the compiler invocation level.
  */
+
+#include <zephyr/devicetree.h>
 
 #if !defined(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) && DT_NODE_EXISTS(DT_ALIAS(caps_lock_led))
 
