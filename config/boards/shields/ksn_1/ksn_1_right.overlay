@@ -10,6 +10,7 @@
         a-gpios = <&gpio0 2  (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         b-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
         steps = <80>;
+        wakeup-source;
         status = "okay";
     };
 
