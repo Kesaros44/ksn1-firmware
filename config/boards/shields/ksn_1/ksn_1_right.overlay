@@ -1,22 +1,35 @@
 #include "ksn_1.dtsi"
 
-&default_transform {
-    col-offset = <11>;
-};
+/* caps_lock_led: ZMK 코어 공식 zmk,indicator-leds 노드는 여기서 못 씀.
+   그 드라이버(app/src/indicators/indicator_leds.c)는 central 전용 함수인
+   zmk_hid_indicators_get_current_profile()/zmk_endpoint_is_connected()를
+   호출하는데, 그 함수들이 정의된 app/src/hid_indicators.c, app/src/endpoints.c는
+   app/CMakeLists.txt에서 "(NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL"
+   조건으로만 컴파일됨. 이 LED는 물리적으로 peripheral(왼쪽)에 달려있어서
+   central에서 처리할 수도 없음 -> zmk,indicator-leds 노드를 두면 링크 단계에서
+   undefined reference 에러가 남. 대신 config/src/ksn1_peripheral_indicators.c
+   (config/zephyr/module.yml + config/CMakeLists.txt로 빌드됨)가 peripheral에서도
+   안전한 zmk_hid_indicators_changed 이벤트로 이 LED를 직접 구동한다.
 
+   status_led: zmk-poor-mans-led-indicator 모듈(west.yml에 이미 임포트됨) 사용.
+   indicator-led alias로 지정하고 .conf에서 CONFIG_INDICATOR_LED_WIDGET=y,
+   CONFIG_INDICATOR_LED_SHOW_BLE=y, CONFIG_INDICATOR_LED_SHOW_PERIPHERAL_BLE=y 를
+   켜면, 왼쪽이 central(오른쪽)에 붙어있는지(블루투스 연결 상태)를 표시한다. */
 / {
-    encoder: encoder_right {
-        compatible = "alps,ec11";
-        a-gpios = <&gpio0 2  (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-        b-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
-        steps = <80>;
-        wakeup-source;
-        status = "okay";
+    leds {
+        compatible = "gpio-leds";
+        caps_lock_led: caps_lock_led {
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 - D19 */
+        };
+        status_led: led_1 {
+            gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;  /* P0.29 - D20 */
+            label = "BLE Status LED";
+        };
     };
 
-    sensors {
-        compatible            = "zmk,keymap-sensors";
-        sensors               = <&encoder>;
-        triggers-per-rotation = <20>;
+    aliases {
+        caps-lock-led = &caps_lock_led;
+        status-led = &status_led;
+        indicator-led = &status_led;
     };
 };
