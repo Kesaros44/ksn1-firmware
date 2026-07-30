@@ -117,10 +117,21 @@ static ssize_t on_write(struct bt_conn *conn, const struct bt_gatt_attr *attr, c
     return len;
 }
 
-BT_GATT_SERVICE_DEFINE(ksn1_conn_status_svc, BT_GATT_PRIMARY_SERVICE(KSN1_CONN_STATUS_SERVICE_UUID),
-                        BT_GATT_CHARACTERISTIC(KSN1_CONN_STATUS_CHAR_UUID,
+/* Declared as plain struct instances (not passed inline) so that the
+ * brace-init-list produced by KSN1_CONN_STATUS_*_UUID never has to flow
+ * through another macro's argument list - the C preprocessor only tracks
+ * parentheses (not braces) when splitting macro arguments, so passing the
+ * brace-init form directly into BT_GATT_PRIMARY_SERVICE/BT_GATT_CHARACTERISTIC
+ * causes the commas inside the UUID byte array to be misread as extra
+ * arguments. Taking the address of a named variable sidesteps that. */
+static const struct bt_uuid_128 ksn1_conn_status_svc_uuid = KSN1_CONN_STATUS_SERVICE_UUID;
+static const struct bt_uuid_128 ksn1_conn_status_char_uuid = KSN1_CONN_STATUS_CHAR_UUID;
+
+BT_GATT_SERVICE_DEFINE(ksn1_conn_status_svc,
+                        BT_GATT_PRIMARY_SERVICE(&ksn1_conn_status_svc_uuid.uuid),
+                        BT_GATT_CHARACTERISTIC(&ksn1_conn_status_char_uuid.uuid,
                                                 BT_GATT_CHRC_WRITE_WITHOUT_RESP,
-                                                BT_GATT_PERM_WRITE_ENCRYPT, NULL, on_write, NULL)));
+                                                BT_GATT_PERM_WRITE_ENCRYPT, NULL, on_write, NULL));
 
 static int ksn1_conn_status_relay_peripheral_init(void) {
     k_work_init_delayable(&blink_work, blink_work_handler);
