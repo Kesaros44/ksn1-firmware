@@ -11,10 +11,12 @@
    (config/zephyr/module.yml + config/CMakeLists.txt로 빌드됨)가 peripheral에서도
    안전한 zmk_hid_indicators_changed 이벤트로 이 LED를 직접 구동한다.
 
-   status_led: zmk-poor-mans-led-indicator 모듈(west.yml에 이미 임포트됨) 사용.
-   indicator-led alias로 지정하고 .conf에서 CONFIG_INDICATOR_LED_WIDGET=y,
-   CONFIG_INDICATOR_LED_SHOW_BLE=y, CONFIG_INDICATOR_LED_SHOW_PERIPHERAL_BLE=y 를
-   켜면, 왼쪽이 central(오른쪽)에 붙어있는지(블루투스 연결 상태)를 표시한다. */
+   status_led: config/src/ksn1_conn_status_relay_peripheral.c가 status-led
+   alias를 통해 직접 구동한다. central(오른쪽)이 PC/호스트에 연결되어 있으면
+   상시 점등, 연결되어 있지 않으면 점멸한다. (central 쪽 상태를 이 LED까지
+   전달하는 방법은 ksn1_conn_status_relay_peripheral.c 상단 주석 참고 -
+   둘 사이에 전용 BLE GATT 서비스를 하나 추가로 얹어서 전달한다.) 예전엔
+   zmk-poor-mans-led-indicator 모듈로 왼쪽<->오른쪽 연결 여부만 표시했었음. */
 / {
     leds {
         compatible = "gpio-leds";
