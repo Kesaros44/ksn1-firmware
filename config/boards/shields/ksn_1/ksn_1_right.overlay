@@ -1,7 +1,7 @@
 #include "ksn_1.dtsi"
 
 &default_transform {
-    col-offset = <15>;
+    col-offset = <11>;
 };
 
 / {
