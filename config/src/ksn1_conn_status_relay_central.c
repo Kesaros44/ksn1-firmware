@@ -23,9 +23,12 @@
  *
  * Only builds on the central (currently ksn_1_right).
  *
- * NOTE: zmk_endpoint_is_connected()/zmk_endpoints_selected() signatures
- * below match the version of ZMK this was written against. If the build
- * errors out on these two calls, check the current
+ * NOTE: as of the ZMK version this is built against, zmk_endpoint_is_connected()
+ * takes no arguments - it reports the connection state of whichever
+ * endpoint is currently selected internally. (Earlier drafts of this file
+ * called it as zmk_endpoint_is_connected(zmk_endpoints_selected()), which
+ * matched an older/incorrect signature and no longer builds.) If this
+ * breaks again on a future ZMK update, check the current
  * zmk/app/include/zmk/endpoints.h for the exact signature and adjust -
  * the rest of this file doesn't need to change.
  */
@@ -204,7 +207,7 @@ static void poll_work_handler(struct k_work *work) {
 
     refresh_peripheral_conn();
 
-    bool connected = zmk_endpoint_is_connected(zmk_endpoints_selected());
+    bool connected = zmk_endpoint_is_connected();
 
     if (!have_sent || connected != last_sent_state) {
         send_state(connected);
