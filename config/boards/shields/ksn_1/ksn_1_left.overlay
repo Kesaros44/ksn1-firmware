@@ -24,7 +24,10 @@
             gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;  /* P0.02 - D19 */
         };
         status_led: led_1 {
-            gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;  /* P0.29 - D20 */
+            gpios = <&gpio0 29 GPIO_ACTIVE_LOW>;  /* P0.29 - D20 (was ACTIVE_HIGH; flipped to
+                                                       test inverted drive circuit - see
+                                                       ksn1_conn_status_relay_peripheral.c
+                                                       "blinks then goes dark on connect" bug) */
             label = "BLE Status LED";
         };
     };
