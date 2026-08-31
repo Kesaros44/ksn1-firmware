@@ -5,6 +5,8 @@ ZMK firmware configuration for the KSN-1 split keyboard — the original, alread
 * Keyboard Maintainer: [AJG](https://github.com/Kesaros44)
 * Hardware Supported: KSN-1 split keyboard, nice!nano v2 (nRF52840), BLE
 
+![KSN-1 완성 사진](images/ksn1_board.webp)
+
 ## Hardware
 
 - **MCU:** nice!nano v2 (nRF52840) per half, wireless (BLE)
