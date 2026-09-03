@@ -62,6 +62,13 @@ LOG_MODULE_REGISTER(ksn1_conn_status_relay_central, CONFIG_ZMK_LOG_LEVEL);
  * same moment was slowing that down, which is why reconnects got
  * noticeably slower after this file was added. Deferring ours fixes it. */
 #define KSN1_DISCOVERY_DELAY_MS 3000
+/* If a discovery attempt finds nothing (e.g. the shared ATT bearer was busy
+ * with ZMK's own split discovery at the same moment - see comment above),
+ * retry after this delay instead of giving up until the bt_conn object
+ * itself changes. Without this, a single failed attempt left status_led
+ * stuck blinking indefinitely even though the split link was fine - this
+ * was the cause of "LED keeps blinking while wired via USB". */
+#define KSN1_DISCOVERY_RETRY_MS 2000
 
 static struct bt_conn *peripheral_conn;
 static uint16_t char_value_handle;
@@ -81,8 +88,16 @@ static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *at
     ARG_UNUSED(conn);
 
     if (!attr) {
-        /* Nothing found this pass; refresh_peripheral_conn() will retry
-         * on the next poll tick if we're still connected. */
+        /* Nothing found this pass. refresh_peripheral_conn() only restarts
+         * discovery when the bt_conn object itself changes, so without an
+         * explicit retry here, a single failed lookup (e.g. ATT bearer busy)
+         * would leave status_led stuck blinking forever even though the
+         * split link never actually dropped. Retry from the top instead. */
+        LOG_WRN("ksn1_conn_status: discovery step found nothing, retrying in %dms",
+                KSN1_DISCOVERY_RETRY_MS);
+        if (peripheral_conn) {
+            k_work_reschedule(&discovery_start_work, K_MSEC(KSN1_DISCOVERY_RETRY_MS));
+        }
         return BT_GATT_ITER_STOP;
     }
 
