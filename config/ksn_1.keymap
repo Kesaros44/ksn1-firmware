@@ -57,20 +57,25 @@
     keymap {
         compatible = "zmk,keymap";
 
-        /* 오른쪽 스페이스바 우측 5키 (row5, col14~18) 배치:
-             LANG1(한/영)  mo 1(FN)  RGUI(Win)  K_APP(메뉴)  LANG2(한자)
+        /* 오른쪽 스페이스바 우측 5키 (row5, col14~18) 배치 (2026-09-05 갱신):
+             LANG1(한/영)  mo 1(FN)  (빈 자리)  K_APP(메뉴)  LANG2(한자)
            default_layer / mac_layer 동일하게 유지함.
+
+           col16(옛 RGUI/Win 자리)은 col13에 물리 스위치가 아예 없다는 걸
+           확인한 뒤, 한/영 오타 자동 되돌리기용 트리거 키를 넣기 위해
+           비워둔 것 - 아직 그 커스텀 비헤이비어가 구현되지 않아 임시로
+           &none. 실제 트리거 드라이버가 만들어지면 이 자리에 바인딩할 것.
 
            LANG1/LANG2는 전용 한/영·한자 키의 표준 HID usage(0x90/0x91)로,
            Windows 10 1809 이후와 macOS 한국어 입력기에서 그대로 동작함.
            만약 회사 PC에서 한/영 전환이 안 되면 Windows 키보드 드라이버가
            "PC/AT 101키 호환 키보드(종류 1)"로 잡혀 있을 가능성이 큼
            (이 드라이버는 한/영=RALT, 한자=RCTRL로만 인식). 그 경우 장치
-           관리자에서 "종류 3"으로 바꾸거나, 이 두 자리를 &kp RALT / &kp RCTRL
+           관리자에서 "종류 3"으로 바꾸거나, col14/col18을 &kp RALT / &kp RCTRL
            로 되돌리면 됨.
 
-           주의: 이 변경으로 오른쪽 RCTRL이 사라짐. Ctrl은 왼쪽 col4(LCTRL)만
-           남으므로, 오른손 Ctrl 조합이 필요하면 알려줄 것. */
+           주의: 이 변경으로 오른쪽 RCTRL과 RGUI(Win) 둘 다 사라짐. Ctrl은
+           왼쪽 col4(LCTRL), Win은 왼쪽 col5(LGUI)만 남음. */
         default_layer {
             sensor-bindings = <&inc_dec_kp C_VOL_DN C_VOL_UP>;
             bindings = <
@@ -79,7 +84,7 @@
                 &kp KP_N7    &kp KP_N8       &kp KP_N9       &kp KP_PLUS  &kp TAB      &kp Q        &kp W        &kp E        &kp R        &kp T        &none        &kp Y        &kp U        &kp I        &kp O        &kp P        &kp LBKT     &kp RBKT     &kp BSLH     &kp DEL      &kp END         &kp PG_DN
                 &kp KP_N4    &kp KP_N5       &kp KP_N6       &none        &kp CLCK     &kp A        &kp S        &kp D        &kp F        &kp G        &none        &kp H        &kp J        &kp K        &kp L        &kp SEMI     &kp SQT      &none        &kp RET      &none        &none           &none
                 &kp KP_N1    &kp KP_N2       &kp KP_N3       &kp KP_ENTER &kp LSHFT    &none        &kp Z        &kp X        &kp C        &kp V        &kp B        &kp B        &kp N        &kp M        &kp COMMA    &kp DOT      &kp FSLH     &none        &kp RSHFT    &none        &kp UP          &none
-                &kp KP_N0    &none           &kp KP_DOT      &none        &kp LCTRL    &kp LGUI     &kp LALT     &none        &kp SPACE    &none        &none        &none        &kp SPACE    &none        &kp LANG1    &mo 1        &kp RGUI     &kp K_APP    &kp LANG2    &kp LEFT     &kp DOWN        &kp RIGHT
+                &kp KP_N0    &none           &kp KP_DOT      &none        &kp LCTRL    &kp LGUI     &kp LALT     &none        &kp SPACE    &none        &none        &none        &kp SPACE    &none        &kp LANG1    &mo 1        &none        &kp K_APP    &kp LANG2    &kp LEFT     &kp DOWN        &kp RIGHT
             >;
         };
 
@@ -103,7 +108,7 @@
                 &kp KP_N7    &kp KP_N8       &kp KP_N9       &kp KP_PLUS  &kp TAB      &kp Q        &kp W        &kp E        &kp R        &kp T        &none        &kp Y        &kp U        &kp I        &kp O        &kp P        &kp LBKT     &kp RBKT     &kp BSLH     &kp DEL      &kp END         &kp PG_DN
                 &kp KP_N4    &kp KP_N5       &kp KP_N6       &none        &kp CLCK     &kp A        &kp S        &kp D        &kp F        &kp G        &none        &kp H        &kp J        &kp K        &kp L        &kp SEMI     &kp SQT      &none        &kp RET      &none        &none           &none
                 &kp KP_N1    &kp KP_N2       &kp KP_N3       &kp KP_ENTER &kp LSHFT    &none        &kp Z        &kp X        &kp C        &kp V        &kp B        &kp B        &kp N        &kp M        &kp COMMA    &kp DOT      &kp FSLH     &none        &kp RSHFT    &none        &kp UP          &none
-                &kp KP_N0    &none           &kp KP_DOT      &none        &kp LCTRL    &kp LALT     &kp LGUI     &none        &kp SPACE    &none        &none        &none        &kp SPACE    &none        &kp LANG1    &mo 1        &kp RGUI     &kp K_APP    &kp LANG2    &kp LEFT     &kp DOWN        &kp RIGHT
+                &kp KP_N0    &none           &kp KP_DOT      &none        &kp LCTRL    &kp LALT     &kp LGUI     &none        &kp SPACE    &none        &none        &none        &kp SPACE    &none        &kp LANG1    &mo 1        &none        &kp K_APP    &kp LANG2    &kp LEFT     &kp DOWN        &kp RIGHT
             >;
         };
     };
