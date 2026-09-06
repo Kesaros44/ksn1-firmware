@@ -60,8 +60,14 @@ struct word_flip_key {
 static struct word_flip_key buffer[WORD_FLIP_MAX_LEN];
 static size_t buffer_len;
 
-static bool is_letter(uint32_t keycode) {
-    return keycode >= A && keycode <= Z;
+/* 주의: 이벤트의 ev->keycode는 usage page가 빠진 순수 usage ID(A=0x04 ...
+ * Z=0x1D)다. 반면 keys.h의 A/Z 매크로는 ZMK_HID_USAGE(page, id)로 page가
+ * 상위 비트에 붙은 값(A=0x70004)이라 그대로 비교하면 절대 참이 되지 않는다.
+ * page는 ev->usage_page로 따로 확인하고, 범위 비교는 ZMK_HID_USAGE_ID()로
+ * 벗겨낸 ID끼리 해야 한다. */
+static bool is_letter(uint16_t usage_page, uint32_t keycode) {
+    return usage_page == HID_USAGE_KEY && keycode >= ZMK_HID_USAGE_ID(A) &&
+           keycode <= ZMK_HID_USAGE_ID(Z);
 }
 
 static int word_flip_keycode_listener(const zmk_event_t *eh) {
@@ -70,7 +76,7 @@ static int word_flip_keycode_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE; /* release는 무시, press만 본다 */
     }
 
-    if (is_letter(ev->keycode)) {
+    if (is_letter(ev->usage_page, ev->keycode)) {
         if (buffer_len < WORD_FLIP_MAX_LEN) {
             buffer[buffer_len].keycode = ev->keycode;
             buffer[buffer_len].explicit_modifiers = ev->explicit_modifiers;
@@ -89,7 +95,11 @@ ZMK_SUBSCRIPTION(word_flip_capture, zmk_keycode_state_changed);
 
 static void queue_kp(struct zmk_behavior_binding_event *event, uint32_t param1) {
     struct zmk_behavior_binding binding = {
-        .behavior_dev = "KP",
+        /* "KP"는 devicetree 라벨일 뿐이고, zmk_behavior_get_binding()이 찾는
+         * 디바이스 이름은 노드 이름인 "key_press"다 (ZMK app/dts/behaviors/
+         * key_press.dtsi의 `kp: key_press { ... }`). "KP"로 두면 조회가
+         * NULL이 되어 "No behavior assigned" 경고만 남기고 아무것도 안 나간다. */
+        .behavior_dev = "key_press",
         .param1 = param1,
         .param2 = 0,
     };
