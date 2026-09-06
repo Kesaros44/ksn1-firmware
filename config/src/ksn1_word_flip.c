@@ -124,8 +124,13 @@ static int on_word_flip_binding_pressed(struct zmk_behavior_binding *binding,
     /* param1: 0 = Windows(Ctrl+Backspace), 1 = macOS(Option+Backspace) */
     uint32_t delete_word = binding->param1 == 1 ? LA(BSPC) : LC(BSPC);
 
-    queue_kp(&event, delete_word);
+    /* 순서 주의: 한/영 전환을 반드시 먼저 보낸다. 한글 입력 중이면 마지막
+     * 음절이 IME의 조합(composition) 상태로 물려 있어서, 이때 오는
+     * Ctrl/Option+Backspace는 앱까지 가지 않고 IME가 가로채 조합 중인 음절만
+     * 지운다(앞쪽 한글이 남는 증상). 전환 키를 먼저 보내면 그 시점에 조합이
+     * 확정되고 IME가 빠지므로 뒤따르는 단어 삭제가 단어 전체에 적용된다. */
     queue_kp(&event, LANG1);
+    queue_kp(&event, delete_word);
 
     for (size_t i = 0; i < snapshot_len; i++) {
         uint32_t param1 = ((uint32_t)snapshot[i].explicit_modifiers << 24) | snapshot[i].keycode;
