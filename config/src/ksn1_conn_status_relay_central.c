@@ -69,6 +69,15 @@ LOG_MODULE_REGISTER(ksn1_conn_status_relay_central, CONFIG_ZMK_LOG_LEVEL);
  * stuck blinking indefinitely even though the split link was fine - this
  * was the cause of "LED keeps blinking while wired via USB". */
 #define KSN1_DISCOVERY_RETRY_MS 2000
+/* Watchdog: if the split link is up but we still have no characteristic
+ * handle this long after the last attempt, start discovery again from the
+ * poll tick. The two retry paths above only fire when they are actually
+ * reached - a discovery that starts cleanly but whose callback never
+ * arrives (link dropped mid-discovery, work item cancelled, ATT request
+ * lost) leaves discovery_done false with nothing scheduled, and the LED
+ * then blinks forever. This tick-driven check does not care why the
+ * previous attempt stalled. */
+#define KSN1_DISCOVERY_WATCHDOG_MS 5000
 /* Re-send the current state every this many poll ticks even when nothing
  * changed. bt_gatt_write_without_response() is an ATT Write Command: there
  * is no response, so a write the peripheral silently discards (e.g. the
@@ -96,6 +105,7 @@ static struct bt_uuid_128 discover_char_uuid = KSN1_CONN_STATUS_CHAR_UUID;
 
 static struct k_work_delayable poll_work;
 static struct k_work_delayable discovery_start_work;
+static int64_t last_discovery_attempt;
 
 static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *attr,
                              struct bt_gatt_discover_params *params) {
@@ -137,6 +147,7 @@ static uint8_t discover_func(struct bt_conn *conn, const struct bt_gatt_attr *at
 static void start_discovery(struct bt_conn *conn) {
     discovery_done = false;
     char_value_handle = 0;
+    last_discovery_attempt = k_uptime_get();
 
     discover_params.uuid = &discover_svc_uuid.uuid;
     discover_params.func = discover_func;
@@ -246,6 +257,16 @@ static void poll_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
 
     refresh_peripheral_conn();
+
+    /* See KSN1_DISCOVERY_WATCHDOG_MS. Skipped while the initial delayed
+     * start (or a scheduled retry) is still pending, so this only kicks in
+     * when nothing else is going to. */
+    if (peripheral_conn && !discovery_done && !k_work_delayable_is_pending(&discovery_start_work) &&
+        (k_uptime_get() - last_discovery_attempt) > KSN1_DISCOVERY_WATCHDOG_MS) {
+        LOG_WRN("ksn1_conn_status: still no handle after %dms, restarting discovery",
+                KSN1_DISCOVERY_WATCHDOG_MS);
+        start_discovery(peripheral_conn);
+    }
 
     bool connected = zmk_endpoint_is_connected();
 
