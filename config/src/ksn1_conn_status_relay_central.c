@@ -69,12 +69,26 @@ LOG_MODULE_REGISTER(ksn1_conn_status_relay_central, CONFIG_ZMK_LOG_LEVEL);
  * stuck blinking indefinitely even though the split link was fine - this
  * was the cause of "LED keeps blinking while wired via USB". */
 #define KSN1_DISCOVERY_RETRY_MS 2000
+/* Re-send the current state every this many poll ticks even when nothing
+ * changed. bt_gatt_write_without_response() is an ATT Write Command: there
+ * is no response, so a write the peripheral silently discards (e.g. the
+ * characteristic is BT_GATT_PERM_WRITE_ENCRYPT and link encryption hasn't
+ * settled yet) still looks like a success here. Sending only on state
+ * change meant one lost write left status_led blinking forever, since
+ * have_sent is otherwise only cleared when the bt_conn object itself
+ * changes. This showed up most on USB, where zmk_endpoint_is_connected()
+ * goes true within a second of boot - so the first write lands at the
+ * earliest, least settled moment. A periodic re-send makes the relay
+ * self-healing regardless of why a write was lost; apply_state() on the
+ * peripheral ignores a value that matches what it already has. */
+#define KSN1_RESEND_TICKS 8 /* 8 * 250ms = every 2s */
 
 static struct bt_conn *peripheral_conn;
 static uint16_t char_value_handle;
 static bool discovery_done;
 static bool have_sent;
 static bool last_sent_state;
+static uint8_t resend_ticks;
 
 static struct bt_gatt_discover_params discover_params;
 static struct bt_uuid_128 discover_svc_uuid = KSN1_CONN_STATUS_SERVICE_UUID;
@@ -224,7 +238,8 @@ static void poll_work_handler(struct k_work *work) {
 
     bool connected = zmk_endpoint_is_connected();
 
-    if (!have_sent || connected != last_sent_state) {
+    if (!have_sent || connected != last_sent_state || ++resend_ticks >= KSN1_RESEND_TICKS) {
+        resend_ticks = 0;
         send_state(connected);
     }
 
