@@ -13,9 +13,11 @@
  *      경계).
  *   2. 트리거 키(&word_flip <os>)를 누르면:
  *      a. 현재 버퍼를 로컬로 복사하고 전역 버퍼를 즉시 비운다.
- *      b. 단어 삭제 조합 전송 - Windows(param1=0)는 Ctrl+Backspace,
- *         macOS(param1=1)는 Option+Backspace.
- *      c. 한/영 전환(LANG1) 전송.
+ *      b. 한/영 전환 전송 - Windows(param1=0)는 LANG1, macOS(param1=1)는
+ *         Caps Lock. 삭제보다 먼저 보내야 한다(아래 on_word_flip_binding_
+ *         pressed의 순서 주석 참고).
+ *      c. 단어 삭제 조합 전송 - Windows는 Ctrl+Backspace, macOS는
+ *         Option+Backspace.
  *      d. 복사해둔 버퍼를 그대로 순서대로 재입력.
  *
  * 전부 zmk_behavior_queue_add()로 큐에 넣는다 - ZMK의 매크로 behavior가
@@ -51,6 +53,12 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #define WORD_FLIP_MAX_LEN 24
 #define WORD_FLIP_TAP_MS 40
 #define WORD_FLIP_WAIT_MS 30
+/* macOS는 한/영 전환에 Caps Lock을 쓰는데(시스템 설정 "Caps Lock 키로 ABC
+ * 입력 소스 전환"), 이 전환은 즉시 반영되지 않고 수백 ms 지연이 있는 것으로
+ * 잘 알려져 있다. Windows의 LANG1처럼 30ms 뒤에 바로 다음 키를 보내면 아직
+ * 이전 입력 모드인 상태에서 삭제/재입력이 들어가 버린다. 그래서 맥에서는
+ * 전환 키 뒤에만 넉넉히 기다린다. */
+#define WORD_FLIP_MAC_TOGGLE_WAIT_MS 350
 
 struct word_flip_key {
     uint32_t keycode;
@@ -93,7 +101,8 @@ static int word_flip_keycode_listener(const zmk_event_t *eh) {
 ZMK_LISTENER(word_flip_capture, word_flip_keycode_listener);
 ZMK_SUBSCRIPTION(word_flip_capture, zmk_keycode_state_changed);
 
-static void queue_kp(struct zmk_behavior_binding_event *event, uint32_t param1) {
+static void queue_kp_ex(struct zmk_behavior_binding_event *event, uint32_t param1,
+                        uint32_t post_wait_ms) {
     struct zmk_behavior_binding binding = {
         /* "KP"는 devicetree 라벨일 뿐이고, zmk_behavior_get_binding()이 찾는
          * 디바이스 이름은 노드 이름인 "key_press"다 (ZMK app/dts/behaviors/
@@ -104,7 +113,11 @@ static void queue_kp(struct zmk_behavior_binding_event *event, uint32_t param1) 
         .param2 = 0,
     };
     zmk_behavior_queue_add(event, binding, true, WORD_FLIP_TAP_MS);
-    zmk_behavior_queue_add(event, binding, false, WORD_FLIP_WAIT_MS);
+    zmk_behavior_queue_add(event, binding, false, post_wait_ms);
+}
+
+static void queue_kp(struct zmk_behavior_binding_event *event, uint32_t param1) {
+    queue_kp_ex(event, param1, WORD_FLIP_WAIT_MS);
 }
 
 static int on_word_flip_binding_pressed(struct zmk_behavior_binding *binding,
@@ -121,15 +134,29 @@ static int on_word_flip_binding_pressed(struct zmk_behavior_binding *binding,
      * 것이므로, 재입력에 쓸 내용은 이미 snapshot에 복사해뒀으니 미리 비움 */
     buffer_len = 0;
 
-    /* param1: 0 = Windows(Ctrl+Backspace), 1 = macOS(Option+Backspace) */
-    uint32_t delete_word = binding->param1 == 1 ? LA(BSPC) : LC(BSPC);
+    /* param1: 0 = Windows, 1 = macOS
+     *
+     * 단어 삭제:  Windows = Ctrl+Backspace,  macOS = Option+Backspace
+     * 한/영 전환: Windows = LANG1(HID 0x90, 전용 한/영 키의 표준 코드)
+     *             macOS   = Caps Lock
+     *
+     * macOS는 LANG1을 한/영 전환으로 처리하지 않는다 - 그 코드는 일본어 JIS
+     * 가나 키(kVK_JIS_Kana)로 해석된다. Apple이 공식적으로 안내하는 전환
+     * 방법은 Control+Space / Control+Option+Space / Caps Lock / Fn(지구본)
+     * 뿐이고, 이 키보드 사용자는 Caps Lock 방식을 쓰므로 그쪽에 맞춘다.
+     * (시스템 설정 > 키보드 > 입력 소스에서 "Caps Lock 키로 ABC 입력 소스
+     * 전환"이 켜져 있어야 한다. 짧게 누르면 입력 소스 전환, 길게 누르면
+     * 실제 Caps Lock이므로 여기서 보내는 40ms 탭은 전환으로 동작한다.) */
+    bool is_mac = binding->param1 == 1;
+    uint32_t delete_word = is_mac ? LA(BSPC) : LC(BSPC);
+    uint32_t lang_toggle = is_mac ? CLCK : LANG1;
 
     /* 순서 주의: 한/영 전환을 반드시 먼저 보낸다. 한글 입력 중이면 마지막
      * 음절이 IME의 조합(composition) 상태로 물려 있어서, 이때 오는
      * Ctrl/Option+Backspace는 앱까지 가지 않고 IME가 가로채 조합 중인 음절만
      * 지운다(앞쪽 한글이 남는 증상). 전환 키를 먼저 보내면 그 시점에 조합이
      * 확정되고 IME가 빠지므로 뒤따르는 단어 삭제가 단어 전체에 적용된다. */
-    queue_kp(&event, LANG1);
+    queue_kp_ex(&event, lang_toggle, is_mac ? WORD_FLIP_MAC_TOGGLE_WAIT_MS : WORD_FLIP_WAIT_MS);
     queue_kp(&event, delete_word);
 
     for (size_t i = 0; i < snapshot_len; i++) {
