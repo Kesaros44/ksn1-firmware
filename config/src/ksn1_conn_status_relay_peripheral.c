@@ -53,8 +53,21 @@
 
 LOG_MODULE_REGISTER(ksn1_conn_status_relay_peripheral, CONFIG_ZMK_LOG_LEVEL);
 
-/* How fast status_led blinks while there's no host connection. */
+/* How fast status_led blinks while the central says there is no host
+ * connection. */
 #define KSN1_CONN_STATUS_BLINK_MS 300
+/* Faster blink used while we have never received a single byte from the
+ * central. This is a deliberate diagnostic: "blinking" on its own can't
+ * tell apart (A) the central correctly reporting "no host connection"
+ * from (B) the relay never delivering anything at all - and those two
+ * have completely different fixes. Splitting the blink rate makes the
+ * board itself say which one it is, with no serial log needed:
+ *   fast (100ms) = nothing ever arrived from the central -> delivery path
+ *   slow (300ms) = central is actively saying "not connected" -> state
+ *                  detection on the central side
+ * Once the first byte arrives this drops back to the normal rate for the
+ * rest of the session. */
+#define KSN1_CONN_STATUS_SILENT_MS 100
 
 #define LED_GPIO_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
 
@@ -62,6 +75,7 @@ static const struct device *led_dev = DEVICE_DT_GET(LED_GPIO_NODE_ID);
 static const uint8_t status_led_idx = DT_NODE_CHILD_IDX(DT_ALIAS(status_led));
 
 static bool host_connected;
+static bool ever_heard_from_central;
 static bool led_phys_on;
 static struct k_work_delayable blink_work;
 
@@ -84,7 +98,8 @@ static void blink_work_handler(struct k_work *work) {
     }
 
     set_led(!led_phys_on);
-    k_work_reschedule(&blink_work, K_MSEC(KSN1_CONN_STATUS_BLINK_MS));
+    k_work_reschedule(&blink_work, K_MSEC(ever_heard_from_central ? KSN1_CONN_STATUS_BLINK_MS
+                                                                  : KSN1_CONN_STATUS_SILENT_MS));
 }
 
 static void apply_state(bool connected) {
@@ -112,6 +127,13 @@ static ssize_t on_write(struct bt_conn *conn, const struct bt_gatt_attr *attr, c
     if (len < 1) {
         return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
     }
+
+    /* Set before apply_state(): if the very first byte says "not
+     * connected", apply_state() returns early (no state change from the
+     * boot default) and the blink loop keeps running - we still want it
+     * to drop to the slow rate from the next tick, because "the central
+     * is talking to us" is exactly what that rate means. */
+    ever_heard_from_central = true;
 
     apply_state(((const uint8_t *)buf)[0] != 0);
     return len;

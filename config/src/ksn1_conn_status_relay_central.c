@@ -146,7 +146,18 @@ static void start_discovery(struct bt_conn *conn) {
 
     int err = bt_gatt_discover(conn, &discover_params);
     if (err) {
-        LOG_WRN("ksn1_conn_status: discovery start failed (%d)", err);
+        /* The callback path already retries when a discovery pass finds
+         * nothing, but until this was added, an error returned by
+         * bt_gatt_discover() itself (e.g. -EBUSY while ZMK's own split
+         * discovery still holds the single-outstanding-request ATT bearer)
+         * only logged a warning and scheduled nothing. discovery_done then
+         * stayed false forever, send_state() early-returned on every poll
+         * tick, and status_led blinked indefinitely. Retry from the top. */
+        LOG_WRN("ksn1_conn_status: discovery start failed (%d), retrying in %dms", err,
+                KSN1_DISCOVERY_RETRY_MS);
+        if (peripheral_conn) {
+            k_work_reschedule(&discovery_start_work, K_MSEC(KSN1_DISCOVERY_RETRY_MS));
+        }
     }
 }
 
