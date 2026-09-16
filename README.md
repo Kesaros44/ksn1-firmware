@@ -47,6 +47,22 @@ Double-tap reset on the nice!nano to enter the UF2 bootloader, then drag the mat
 
 Flash the `settings_reset` artifact to a half to wipe its BLE bonds, then reflash normal firmware and re-pair.
 
+## Recent Changes
+
+- Added dedicated Hangul (`LANG1`) / Hanja (`LANG2`) keys to the right-half thumb cluster; on macOS the language toggle uses Caps Lock instead (`LANG1` is read there as a JIS kana key, not Hangul/English).
+- Fixed `word_flip` (the Hangul/English auto-correct trigger) doing nothing at all (usage-page mismatch in the letter check, wrong `&kp` behavior device name).
+- Fixed the status LED staying stuck blinking over a USB connection.
+- Added USB HID settings for compatibility with corporate security software over a wired connection (HKRO fixed at 6-key, boot protocol, BASIC consumer usages, dedicated VID/PID).
+- Raised BLE TX power by +8dBm for more reliable connections.
+
+## Known Issues / TODO
+
+- **USB PID not registered:** `CONFIG_USB_DEVICE_PID=0x4B53` is a temporary placeholder. Needs a real PID from [pid.codes](https://pid.codes) before any commercial sale.
+- **No right RCTRL/RGUI:** the Hangul/Hanja keys took over what used to be RCTRL and RGUI on the right half — those modifiers now live only on the left half.
+- **mac_layer Hanja key may need Option+Return:** [KSN-2](https://github.com/Kesaros44/ksn2-firmware)'s `mac_layer` sends `LA(RET)` (Option+Return, macOS's actual Hanja shortcut) for its Hanja key because `LANG2` does nothing there; this board's `mac_layer` still sends plain `LANG2`. Worth porting the same fix.
+- **word_flip's macOS delete may share a word-boundary bug found on KSN-3:** on 2026-09-16, [KSN-3](https://github.com/Kesaros44/ksn3-firmware) found that Option+Backspace doesn't respect word boundaries inside Hangul IME composition and switched to resending plain Backspace instead. This board still uses Option+Backspace for that step — check whether it needs the same fix.
+- **Modifier keys may still reset the word_flip buffer:** pressing Shift (or any other non-letter key) clears the tracked word, which could truncate a capital letter typed mid-word. Not yet confirmed fixed.
+
 ---
 
 # ksn1-firmware (한국어)
@@ -95,3 +111,19 @@ nice!nano의 리셋 버튼을 더블탭해서 UF2 부트로더로 진입한 뒤,
 ## 재페어링 / 블루투스 본딩 초기화
 
 `settings_reset` artifact를 해당 half에 플래시하면 BLE 본딩이 초기화됩니다. 그 다음 정상 펌웨어를 다시 플래시하고 재페어링하세요.
+
+## 최근 변경 사항
+
+- 오른쪽 half 엄지 클러스터에 전용 한/영(`LANG1`)·한자(`LANG2`) 키 추가. macOS에서는 `LANG1`이 한/영 전환이 아니라 JIS 가나 키로 인식되기 때문에, 언어 전환을 Caps Lock 방식으로 대체함.
+- 한/영 오타 자동 되돌리기(`word_flip`)가 아무 동작도 하지 않던 버그 수정 (글자 인식 시 usage page 불일치, `&kp` behavior 디바이스명 오류).
+- 유선(USB) 연결 시 상태 LED가 계속 점멸하던 버그 수정.
+- 유선 연결 시 사내 보안 프로그램 호환을 위한 USB HID 설정 추가 (HKRO 6키 고정, 부트 프로토콜, 컨슈머 리포트 BASIC 제한, 전용 VID/PID).
+- BLE 연결 안정성을 위해 TX 파워 +8dBm 상향.
+
+## 알려진 이슈 / TODO
+
+- **USB PID 미등록:** `CONFIG_USB_DEVICE_PID=0x4B53`은 임시로 지정한 값입니다. 정식 판매 전 [pid.codes](https://pid.codes)에서 정식 PID를 할당받아야 합니다.
+- **오른쪽 RCTRL/RGUI 부재:** 한/영·한자 키가 그 자리를 대체하면서, 해당 모디파이어는 왼쪽 half에만 남았습니다.
+- **mac_layer 한자 키는 Option+Return이 필요할 수 있음:** [KSN-2](https://github.com/Kesaros44/ksn2-firmware)는 `mac_layer`의 한자 키를 `LA(RET)`(Option+Return, macOS의 실제 한자 변환 단축키)로 이미 바꿨습니다 — `LANG2`가 macOS에서 아무 동작도 안 하기 때문입니다. 이 저장소의 `mac_layer`는 아직 `LANG2` 그대로라 동일하게 수정하는 게 좋습니다.
+- **word_flip의 macOS 삭제 방식이 KSN-3에서 발견된 단어 경계 버그를 공유할 수 있음:** 2026-09-16, [KSN-3](https://github.com/Kesaros44/ksn3-firmware)에서 Option+Backspace가 한글 IME 조합 중 단어 경계를 지키지 않는 문제가 발견되어 일반 Backspace 반복 전송 방식으로 교체했습니다. 이 저장소는 아직 Option+Backspace를 쓰고 있어 같은 문제가 있을 수 있으니 확인이 필요합니다.
+- **수식키가 word_flip 버퍼를 여전히 리셋시킬 수 있음:** Shift 등 알파벳이 아닌 키를 누르면 인식 중이던 단어가 초기화되어, 단어 중간의 대문자가 잘릴 수 있습니다. 아직 수정 여부가 확인되지 않았습니다.
