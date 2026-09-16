@@ -2,12 +2,16 @@
  * Central-side counterpart to ksn1_conn_status_relay_peripheral.c.
  *
  * Every KSN1_POLL_MS, checks whether this half (currently ksn_1_right,
- * the split central) has an active connection to a PC/host, and - only
- * when that state actually changes - writes a single byte to the custom
- * GATT characteristic the peripheral (left half) exposes for this. See
+ * the split central) has an active connection to a PC/host, and which BLE
+ * profile is currently selected (zmk_ble_active_profile_index()) - and
+ * writes both as a 2-byte payload ([0]=connected, [1]=profile index) to
+ * the custom GATT characteristic the peripheral (left half) exposes for
+ * this, whenever either value changes (or periodically regardless, see
+ * KSN1_RESEND_TICKS). The peripheral uses byte [1] to blink out the
+ * active profile number on status_led while not connected. See
  * ksn1_conn_status_relay_peripheral.c for the full rationale on why a
  * dedicated GATT service is used instead of piggybacking on HID
- * indicators.
+ * indicators, and for the blink-pattern logic itself.
  *
  * FINDING THE RIGHT BLE CONNECTION
  * ---------------------------------
@@ -46,6 +50,7 @@
 #include <zephyr/logging/log.h>
 
 #include <zmk/endpoints.h>
+#include <zmk/ble.h>
 
 #include "ksn1_conn_status_relay.h"
 
@@ -97,6 +102,7 @@ static uint16_t char_value_handle;
 static bool discovery_done;
 static bool have_sent;
 static bool last_sent_state;
+static uint8_t last_sent_profile;
 static uint8_t resend_ticks;
 
 static struct bt_gatt_discover_params discover_params;
@@ -237,19 +243,20 @@ static void refresh_peripheral_conn(void) {
     }
 }
 
-static void send_state(bool connected) {
+static void send_state(bool connected, uint8_t profile) {
     if (!peripheral_conn || !discovery_done || char_value_handle == 0) {
         return;
     }
 
-    uint8_t val = connected ? 1 : 0;
-    int err = bt_gatt_write_without_response(peripheral_conn, char_value_handle, &val,
+    uint8_t val[2] = {connected ? 1 : 0, profile};
+    int err = bt_gatt_write_without_response(peripheral_conn, char_value_handle, val,
                                               sizeof(val), false);
     if (err) {
         LOG_WRN("ksn1_conn_status: write failed (%d)", err);
         return;
     }
     last_sent_state = connected;
+    last_sent_profile = profile;
     have_sent = true;
 }
 
@@ -269,10 +276,12 @@ static void poll_work_handler(struct k_work *work) {
     }
 
     bool connected = zmk_endpoint_is_connected();
+    uint8_t profile = (uint8_t)zmk_ble_active_profile_index();
 
-    if (!have_sent || connected != last_sent_state || ++resend_ticks >= KSN1_RESEND_TICKS) {
+    if (!have_sent || connected != last_sent_state || profile != last_sent_profile ||
+        ++resend_ticks >= KSN1_RESEND_TICKS) {
         resend_ticks = 0;
-        send_state(connected);
+        send_state(connected, profile);
     }
 
     k_work_reschedule(&poll_work, K_MSEC(KSN1_POLL_MS));
